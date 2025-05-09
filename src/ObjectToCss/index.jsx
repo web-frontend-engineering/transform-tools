@@ -1,53 +1,73 @@
 import './index.css'
 
-export default function ObjectToCss() {
-  function convertToCSS() {
-    const reactStyleInput = document.getElementById('reactStyle').value;
-    const errorElement = document.getElementById('error');
-    const cssOutput = document.getElementById('cssOutput');
+function convertToCSS() {
+  const reactStyleInput = document.getElementById('reactStyle').value;
+  const errorElement = document.getElementById('error');
+  const cssOutput = document.getElementById('cssOutput');
 
+  try {
+    // 首先尝试解析为 JSON，如果失败则尝试解析为 JavaScript 对象
+    let styleObject;
     try {
-      // Parse the input as JSON
-      const styleObject = JSON.parse(reactStyleInput);
-
-      // Convert React style object to CSS
-      let cssString = '';
-      for (const [key, value] of Object.entries(styleObject)) {
-        // Convert camelCase to kebab-case
-        const cssProperty = key.replace(/([A-Z])/g, '-$1').toLowerCase();
-        cssString += `${cssProperty}: ${value};\n`;
+      styleObject = JSON.parse(reactStyleInput);
+    } catch (jsonError) {
+      // 如果 JSON 解析失败，尝试解析为 JavaScript 对象
+      // 首先检查输入是否是单个属性（没有对象包装）
+      const trimmedInput = reactStyleInput.trim();
+      if (!trimmedInput.startsWith('{') && !trimmedInput.endsWith('}')) {
+        // 将输入包装在对象中
+        styleObject = new Function('return {' + trimmedInput + '}')();
+      } else {
+        styleObject = new Function('return ' + trimmedInput)();
       }
-
-      // Display the result
-      cssOutput.value = cssString;
-      errorElement.style.display = 'none';
-      // eslint-disable-next-line
-    } catch (error) {
-      errorElement.textContent = 'Error: Please enter a valid JSON object';
-      errorElement.style.display = 'block';
-      cssOutput.value = '';
     }
-  }
 
+    // 将 React 样式对象转换为 CSS
+    let cssString = '';
+    for (const [key, value] of Object.entries(styleObject)) {
+      // 将驼峰命名转换为连字符命名
+      const cssProperty = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+      cssString += `${cssProperty}: ${value};\n`;
+    }
+
+    // 显示结果
+    cssOutput.value = cssString;
+    errorElement.style.display = 'none';
+  } catch (error) {
+    errorElement.textContent = '错误：请输入有效的样式对象或属性';
+    errorElement.style.display = 'block';
+    cssOutput.value = '';
+  }
+}
+
+export default function ObjectToCss() {
   return (
     <div className="container">
-      <h1>React Style to CSS Converter</h1>
+      <h1>【样式对象】转【CSS】转换器</h1>
       <div className="input-group">
-        <label htmlFor="reactStyle">React Style Object:</label>
+        <label htmlFor="reactStyle">样式对象：</label>
         <textarea
           id="reactStyle"
-          placeholder='Enter React style object here, e.g.:
+          placeholder='在此输入样式对象或属性，例如：
 {
     "backgroundColor": "#f0f0f0",
     "padding": "20px",
     "borderRadius": "5px"
-}'
+}
+或
+{
+    backgroundColor: "#f0f0f0",
+    padding: "20px",
+    borderRadius: "5px"
+}
+或
+flexDirection: "column"'
           defaultValue={""}
         />
       </div>
-      <button onClick={convertToCSS}>Convert to CSS</button>
+      <button onClick={convertToCSS}>转换为 CSS</button>
       <div className="input-group">
-        <label htmlFor="cssOutput">CSS Output:</label>
+        <label htmlFor="cssOutput">CSS 输出：</label>
         <textarea id="cssOutput" readOnly="" defaultValue={""}/>
       </div>
       <div id="error" className="error"/>
