@@ -1,4 +1,5 @@
 import './index.css'
+import React from "react";
 
 function convertToCSS() {
   const reactStyleInput = document.getElementById('reactStyle').value;
@@ -43,7 +44,7 @@ function convertToCSS() {
 export default function ObjectToCss() {
   return (
     <div className="container">
-      <h1>【样式对象】转【CSS】转换器</h1>
+      <h1>【对象】转【CSS】工具</h1>
       <div className="input-group">
         <label htmlFor="reactStyle">样式对象：</label>
         <textarea
