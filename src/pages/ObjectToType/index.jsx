@@ -14,14 +14,42 @@ function inferType(value) {
   return 'any';
 }
 
-function getTypeDeclaration(obj, name = 'RootObject') {
+function getTypeDeclaration(obj, name = 'RootObject', typeMap = {}, parentNames = new Set()) {
+  // 防止递归引用死循环
+  if (parentNames.has(name)) return '';
+  parentNames.add(name);
   let lines = [`type ${name} = {`];
   for (const key in obj) {
-    lines.push(`  ${key}: ${inferType(obj[key])};`);
+    const value = obj[key];
+    if (Array.isArray(value)) {
+      if (value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
+        // 内联对象类型数组
+        const objFields = Object.entries(value[0])
+          .map(([k, v]) => `${k}: ${inferType(v)}`)
+          .join('; ');
+        lines.push(`  ${key}: { ${objFields} }[];`);
+      } else {
+        lines.push(`  ${key}: ${inferType(value)};`);
+      }
+    } else if (typeof value === 'object' && value !== null) {
+      // 嵌套对象
+      const childTypeName = name + '_' + key.charAt(0).toUpperCase() + key.slice(1);
+      lines.push(`  ${key}: ${childTypeName};`);
+      typeMap[childTypeName] = getTypeDeclaration(value, childTypeName, typeMap, new Set(parentNames));
+    } else {
+      lines.push(`  ${key}: ${inferType(value)};`);
+    }
   }
   lines.push('}');
-  return lines.join('\n');
+  parentNames.delete(name);
+  typeMap[name] = lines.join('\n');
+  // 最顶层时拼接所有类型
+  if (name === 'RootObject' || name === parentNames.values().next().value) {
+    return Object.values(typeMap).reverse().join('\n\n');
+  }
+  return typeMap[name];
 }
+
 
 export default function ObjectToType() {
   const inputRef = useRef();
@@ -38,6 +66,7 @@ export default function ObjectToType() {
       try {
         obj = JSON.parse(input);
       } catch (jsonErr) {
+        console.log('jsonErr', jsonErr);
         // 尝试 JS 对象解析
         const trimmed = input.trim();
         if (!trimmed.startsWith('{') && !trimmed.endsWith('}')) {
@@ -50,22 +79,29 @@ export default function ObjectToType() {
       outputRef.current.value = typeDecl;
       errorRef.current.style.display = 'none';
     } catch (err) {
+      console.log(err)
       errorRef.current.textContent = '错误：请输入有效的 JS 对象';
       errorRef.current.style.display = 'block';
       outputRef.current.value = '';
     }
   }
 
-  const example = `{
-  "server_name": "龙争虎斗",
-  "role_name": "居士小曾",
-  "role_level": 111,
-  "zone_name": "电信区",
-  "role_type": "标准女",
-  "role_force": "七秀",
-  "is_woman": false,
-  "role_create_time": "2024-12-09 21:49:37"
-}`;
+  const exampleObj = {
+    "role_level": 111,
+    "role_name": "居士小曾",
+    "zone_name": "电信区",
+    "server_name": "龙争虎斗",
+    "is_single": false,
+    "role_create_time": "2024-12-09 21:49:37",
+    "list": [
+      {
+        "id": 1,
+        "title": "账号",
+        "align": "center",
+      }
+    ]
+  }
+  const example = JSON.stringify(exampleObj, null, 2);
 
   return (
     <div className="container">
