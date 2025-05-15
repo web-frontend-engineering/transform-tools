@@ -60,10 +60,10 @@
 
 .app-main {
     flex: 1;
-    padding: 32px;
+    padding: 16px;
     background: #f6f8fa;
     min-width: 0;
     border-radius: 8px;
-    margin: 24px;
+    margin: 16px;
     box-shadow: 0 2px 8px #e4e9ee;
 }
