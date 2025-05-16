@@ -14,40 +14,31 @@ function inferType(value) {
   return 'any';
 }
 
-function getTypeDeclaration(obj, name = 'RootObject', typeMap = {}, parentNames = new Set()) {
-  // 防止递归引用死循环
-  if (parentNames.has(name)) return '';
-  parentNames.add(name);
-  let lines = [`type ${name} = {`];
+function getTypeDeclaration(obj, name = 'RootObject', depth = 0) {
+  const indent = (n) => '  '.repeat(n);
+  let lines = [depth === 0 ? `type ${name} = {` : '{'];
   for (const key in obj) {
     const value = obj[key];
-    if (Array.isArray(value)) {
+    if (Array.isArray(value)) { // 属性值是【数组】
       if (value.length > 0 && typeof value[0] === 'object' && value[0] !== null) {
-        // 内联对象类型数组
-        const objFields = Object.entries(value[0])
-          .map(([k, v]) => `${k}: ${inferType(v)}`)
-          .join('; ');
-        lines.push(`  ${key}: { ${objFields} }[];`);
+        // 递归处理数组元素对象类型，嵌套统一换行缩进
+        const nested = getTypeDeclaration(value[0], '', depth + 1).trim();
+        const nestedLines = nested.split('\n').map(line => indent(depth + 2) + line).join('\n');
+        lines.push(`${indent(depth + 1)}${key}:\n${nestedLines};`);
       } else {
-        lines.push(`  ${key}: ${inferType(value)};`);
+        lines.push(`${indent(depth + 1)}${key}: ${inferType(value)};`);
       }
-    } else if (typeof value === 'object' && value !== null) {
-      // 嵌套对象
-      const childTypeName = name + '_' + key.charAt(0).toUpperCase() + key.slice(1);
-      lines.push(`  ${key}: ${childTypeName};`);
-      typeMap[childTypeName] = getTypeDeclaration(value, childTypeName, typeMap, new Set(parentNames));
-    } else {
-      lines.push(`  ${key}: ${inferType(value)};`);
+    } else if (typeof value === 'object' && value !== null) { // 属性值是【对象】
+      // 递归处理嵌套对象，嵌套统一换行缩进
+      const nested = getTypeDeclaration(value, '', depth + 1).trim();
+      const nestedLines = nested.split('\n').map(line => indent(depth + 2) + line).join('\n');
+      lines.push(`${indent(depth + 1)}${key}:\n${nestedLines};`);
+    } else { // 属性值是【基本数据类型】
+      lines.push(`${indent(depth + 1)}${key}: ${inferType(value)};`);
     }
   }
-  lines.push('}');
-  parentNames.delete(name);
-  typeMap[name] = lines.join('\n');
-  // 最顶层时拼接所有类型
-  if (name === 'RootObject' || name === parentNames.values().next().value) {
-    return Object.values(typeMap).reverse().join('\n\n');
-  }
-  return typeMap[name];
+  lines.push(indent(depth) + '}');
+  return lines.join('\n');
 }
 
 
@@ -56,6 +47,7 @@ export default function ObjectToType() {
   const typeNameRef = useRef();
   const outputRef = useRef();
   const errorRef = useRef();
+  const [copyTip, setCopyTip] = React.useState('');
 
   function handleConvert() {
     const input = inputRef.current.value;
@@ -87,17 +79,29 @@ export default function ObjectToType() {
   }
 
   const exampleObj = {
-    "role_level": 111,
-    "role_name": "居士小曾",
-    "zone_name": "电信区",
-    "server_name": "龙争虎斗",
-    "is_single": false,
-    "role_create_time": "2024-12-09 21:49:37",
-    "list": [
+    "need_feedback": false,
+    "item_status": 200,
+    "service_info": {
+      "name": "流程测试2",
+      "description": "流程测试2",
+      "icon": "https://static.com/backend/15294641189257.jpg"
+    },
+    "item_type": "2",
+    "start_sync": true,
+    "change_key": "c7e06df584bf4bd4bda8e03276c50d2c",
+    "stop_item_reason": null,
+    "allow_stop_item": false,
+    "is_reset_mobile": false,
+    "stage_info": {
+      "accept": {"memo": "您的问题创建成功", "create_tm": "2025-05-12 11:12:39"},
+      "finish": {"stage": 6, "memo": "工单审核异常，请您尝试重新提交", "create_tm": "2025-05-12 11:12:39"}
+    },
+    "item_log": [
+      {"memo": "您的问题创建成功", "create_tm": "2025-05-12 11:12:39"},
       {
-        "id": 1,
-        "title": "账号",
-        "align": "center",
+        "stage": 1,
+        "memo": "您的问题已生成工单",
+        "create_tm": "2025-05-12 11:12:39"
       }
     ]
   }
@@ -135,7 +139,22 @@ export default function ObjectToType() {
               defaultValue="Object"
             />
           </div>
-          <button onClick={handleConvert}>生成类型声明</button>
+          <div style={{display: 'flex', gap: '12px'}}>
+            <button onClick={handleConvert}>生成类型声明</button>
+            <button
+              type="button"
+              onClick={() => {
+                if (outputRef.current) {
+                  navigator.clipboard.writeText(outputRef.current.value).then(() => {
+                    setCopyTip('复制成功！');
+                    setTimeout(() => setCopyTip(''), 3000);
+                  });
+                }
+              }}
+            >一键复制
+            </button>
+            {copyTip && <span style={{color: '#52c41a', alignSelf: 'center'}}>{copyTip}</span>}
+          </div>
         </div>
       </div>
 
