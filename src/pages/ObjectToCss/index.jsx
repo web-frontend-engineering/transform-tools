@@ -42,36 +42,46 @@ function convertToCSS() {
 }
 
 export default function ObjectToCss() {
+  const [copyTip, setCopyTip] = React.useState('');
   return (
     <div className="object-to-css">
-      <h1>【对象】转【CSS】工具</h1>
-      <div className="input-group">
-        <label htmlFor="reactStyle">样式对象：</label>
-        <textarea
-          id="reactStyle"
-          placeholder='在此输入样式对象或属性，例如：
-{
-    "backgroundColor": "#f0f0f0",
-    "padding": "20px",
-    "borderRadius": "5px"
-}
-或
-{
-    backgroundColor: "#f0f0f0",
-    padding: "20px",
-    borderRadius: "5px"
-}
-或
-flexDirection: "column"'
-          defaultValue={""}
-        />
+      <h1>【对象】转【CSS样式】工具</h1>
+      <div className="flex-row-container">
+        {/* 左侧输入区 */}
+        <div className="left-panel">
+          <div className="input-group">
+            <label htmlFor="reactStyle">样式对象：</label>
+            <textarea
+              id="reactStyle"
+              placeholder={`在此输入样式对象或属性，例如：\n{\n    "backgroundColor": "#f0f0f0",\n    "padding": "20px",\n    "borderRadius": "5px"\n}\n或\n{\n    backgroundColor: "#f0f0f0",\n    padding: "20px",\n    borderRadius: "5px"\n}\n或\nflexDirection: "column"`}
+              defaultValue={""}
+            />
+          </div>
+          <button onClick={convertToCSS}>转换为 CSS</button>
+        </div>
+        {/* 右侧输出区 */}
+        <div className="right-panel">
+          <div className="input-group">
+            <label htmlFor="cssOutput">CSS 输出：</label>
+            <textarea id="cssOutput" readOnly defaultValue={""}/>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              const cssOutput = document.getElementById('cssOutput');
+              if (cssOutput) {
+                navigator.clipboard.writeText(cssOutput.value).then(() => {
+                  setCopyTip('复制成功！');
+                  setTimeout(() => setCopyTip(''), 3000);
+                });
+              }
+            }}
+          >一键复制
+          </button>
+          {copyTip && <span style={{color: '#52c41a', alignSelf: 'center'}}>{copyTip}</span>}
+          <div id="error" className="error"/>
+        </div>
       </div>
-      <button onClick={convertToCSS}>转换为 CSS</button>
-      <div className="input-group">
-        <label htmlFor="cssOutput">CSS 输出：</label>
-        <textarea id="cssOutput" readOnly="" defaultValue={""}/>
-      </div>
-      <div id="error" className="error"/>
     </div>
   )
 }
