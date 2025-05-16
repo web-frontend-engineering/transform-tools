@@ -1,4 +1,4 @@
-import './index.css'
+import './index.scss'
 import React from "react";
 
 function convertToCSS() {
@@ -43,7 +43,7 @@ function convertToCSS() {
 
 export default function ObjectToCss() {
   return (
-    <div className="container">
+    <div className="object-to-css">
       <h1>【对象】转【CSS】工具</h1>
       <div className="input-group">
         <label htmlFor="reactStyle">样式对象：</label>

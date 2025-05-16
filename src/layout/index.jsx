@@ -1,6 +1,6 @@
 import React from 'react';
 import {Link, useLocation} from 'react-router-dom';
-import './index.css';
+import './index.scss';
 
 export default function Layout({children}) {
   const location = useLocation();

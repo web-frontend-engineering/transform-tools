@@ -1,5 +1,5 @@
 import React, {useRef} from 'react';
-import './index.css';
+import './index.scss';
 
 function inferType(value) {
   if (typeof value === 'number') return 'number';
@@ -104,32 +104,41 @@ export default function ObjectToType() {
   const example = JSON.stringify(exampleObj, null, 2);
 
   return (
-    <div className="container">
+    <div className="object-to-type">
       <h1>【对象】转【类型声明】工具</h1>
-      <div className="input-group">
-        <label htmlFor="jsObject">JS对象：</label>
-        <textarea
-          id="jsObject"
-          ref={inputRef}
-          placeholder={example}
-          defaultValue={example}
-        />
+      <div className="flex-row-container">
+        {/* 左侧：JS对象输入区和类型名 */}
+        <div className="left-panel">
+          <div className="input-group">
+            <label htmlFor="jsObject">JS对象：</label>
+            <textarea
+              id="jsObject"
+              ref={inputRef}
+              placeholder={example}
+              defaultValue={example}
+            />
+          </div>
+        </div>
+        {/* 右侧：类型声明输出区 */}
+        <div className="right-panel">
+          <div className="input-group">
+            <label htmlFor="typeOutput">类型声明：</label>
+            <textarea id="typeOutput" ref={outputRef} readOnly defaultValue=""/>
+          </div>
+          <div id="error" className="error" ref={errorRef}/>
+          <div className="input-group">
+            <label htmlFor="typeName">类型名：</label>
+            <input
+              id="typeName"
+              ref={typeNameRef}
+              type="text"
+              defaultValue="Object"
+            />
+          </div>
+          <button onClick={handleConvert}>生成类型声明</button>
+        </div>
       </div>
-      <button onClick={handleConvert}>生成类型声明</button>
-      <div className="input-group">
-        <label htmlFor="typeName">类型名：</label>
-        <input
-          id="typeName"
-          ref={typeNameRef}
-          type="text"
-          defaultValue="Object"
-        />
-      </div>
-      <div className="input-group">
-        <label htmlFor="typeOutput">类型声明：</label>
-        <textarea id="typeOutput" ref={outputRef} readOnly defaultValue=""/>
-      </div>
-      <div id="error" className="error" ref={errorRef}/>
+
     </div>
   );
 }
