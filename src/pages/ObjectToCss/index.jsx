@@ -53,7 +53,7 @@ export default function ObjectToCss() {
             <label htmlFor="reactStyle">样式对象：</label>
             <textarea
               id="reactStyle"
-              placeholder={`在此输入样式对象或属性，例如：\n{\n    "backgroundColor": "#f0f0f0",\n    "padding": "20px",\n    "borderRadius": "5px"\n}\n或\n{\n    backgroundColor: "#f0f0f0",\n    padding: "20px",\n    borderRadius: "5px"\n}\n或\nflexDirection: "column"`}
+              placeholder={`在此输入样式对象或属性，例如：\n{\n    "backgroundColor": "#f0f0f0",\n    "padding": "20px",\n    "borderRadius": "5px"\n}\n或\nflexDirection: "column"`}
               defaultValue={""}
             />
           </div>
